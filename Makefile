@@ -56,7 +56,8 @@ text_base_image:
 	docker push rogermahler/humlab_text_base:latest
 
 notebook_image:
-	docker build -t $(LOCAL_NOTEBOOK_IMAGE):latest -f westac_lab/Dockerfile westac_lab
+	@echo "Building image using penelope v$(PENELOPE_VERSION)"
+	docker build --build-arg PENELOPE_VERSION=$(PENELOPE_VERSION) -t $(LOCAL_NOTEBOOK_IMAGE):latest -f westac_lab/Dockerfile westac_lab
 
 bash:
 	@docker exec -it -t westac_hub /bin/bash
@@ -92,9 +93,9 @@ nuke:
 	-docker images -q --filter "dangling=true" | xargs docker rmi
 
 requirements.txt: ../../Pipfile.lock
-	@echo "error: requirements.txt, is outdated"
-	@echo "	$(CURDIR)"
-	@echo "  pipenv run pip freeze > requirements.txt"
+	@wget -qO Pipfile.lock  https://raw.githubusercontent.com/welfare-state-analytics/welfare_state_analytics/master/Pipfile.lock
 	@jq -r '.default | to_entries[] | .key + .value.version' Pipfile.lock > requirements.txt
+	@if ! cmp -s ./requirements.txt inidun_lab/requirements.txt ; then \cp -f ./requirements.txt inidun_lab/requirements.txt; fi
+	@rm -f requirements.txt Pipfile.lock
 
 .PHONY: bash clear_volumes clean down up follow build restart pull nuke network userlist
