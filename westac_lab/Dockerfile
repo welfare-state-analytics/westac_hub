@@ -1,4 +1,4 @@
-FROM python:3.8-slim
+FROM python:3.8.5-slim-buster
 
 # Notice: part of this code is from jupyter project
 LABEL MAINTAINER Roger Mähler <roger dot mahler at umu dot se>
@@ -73,43 +73,36 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/
 
 RUN chmod +x /usr/local/bin/tini
 
-ADD https://raw.githubusercontent.com/welfare-state-analytics/welfare_state_analytics/master/requirements.txt requirements.txt
-
 RUN python --version \
     && pip install --upgrade pip \
-    # Remove edit dependency of penelope (installed below instead)
-    && grep -v penelope requirements.txt > requirements.tmp && mv --force requirements.tmp requirements.txt \
-    && pip install -r requirements.txt \
     && pip install --upgrade jupyterhub==1.0.0 \
     && exit 0
 
-RUN jupyter labextension install \
-         @jupyter-widgets/jupyterlab-manager \
-         jupyter-matplotlib \
-         @bokeh/jupyter_bokeh \
-         ipyaggrid \
-         jupyterlab-jupytext
+RUN pip install humlab-westac \
+    && jupyter labextension install \
+        @jupyter-widgets/jupyterlab-manager \
+        jupyter-matplotlib \
+        @bokeh/jupyter_bokeh \
+        ipyaggrid \
+        qgrid2 \
+        jupyterlab-jupytext \
+    && exit 0
 
-# Install R https://cran.r-project.org/bin/linux/debian/
-
-RUN python -m nltk.downloader -d /usr/local/share/nltk_data stopwords punkt sentiwordnet \
+RUN \
+    python -m nltk.downloader -d /usr/local/share/nltk_data stopwords punkt sentiwordnet \
     \
+    && pip install spacy-lookups-data \
     && python -m spacy download en_core_web_sm \
     && python -m spacy download en_core_web_md \
     && exit 0
 
 ENV NLTK_DATA=/usr/local/share/nltk_data
-ARG PENELOPE_VERSION=0.2.3
-RUN wget https://github.com/humlab/penelope/releases/download/v${PENELOPE_VERSION}/penelope-${PENELOPE_VERSION}-py3-none-any.whl \
-    && pip install penelope-${PENELOPE_VERSION}-py3-none-any.whl
-# EXPOSE ${NB_PORT}
 
 ENTRYPOINT ["tini", "-g", "--"]
 
 RUN adduser $NB_USER --uid $NB_UID --gid $NB_GID --disabled-password --gecos '' --shell /bin/bash \
     && adduser $NB_USER sudo \
     && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-# RUN useradd -m $NB_USER
 
 ENV HOME=/home/$NB_USER
 USER $NB_USER
@@ -124,7 +117,7 @@ ADD https://api.github.com/repos/welfare-state-analytics/welfare_state_analytics
 
 RUN git clone https://github.com/welfare-state-analytics/welfare_state_analytics.git \
     && cd welfare_state_analytics \
-    && rm -rf .git* .docker* .travis* Poetry* archive docker pytest* run* westac_hub Makefile requirements.txt setup.py NOTE.md
+    && rm -rf .git* .docker* .travis* Poetry* archive docker pytest* tests run* westac_hub Makefile requirements.txt setup.py NOTE.md
 
 #COPY user-settings  $HOME/.jupyter/lab/
 #COPY jupyter_notebook_config.py $HOME/.jupyter/
