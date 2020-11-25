@@ -86,14 +86,12 @@ RUN python --version \
 
 #    && pip install jupyterhub==${JUPYTERHUB_VERSION} \
 
-# RUN beakerx install
 RUN jupyter labextension install \
          @jupyter-widgets/jupyterlab-manager \
          jupyter-matplotlib \
          @bokeh/jupyter_bokeh \
          @jupyterlab/toc \
-         @jupyterlab/google-drive \
-         beakerx-jupyterlab
+         @jupyterlab/google-drive
 
 # RUN python -m nltk.downloader -d /usr/local/share/nltk_data stopwords punkt sentiwordnet \
 #     \
