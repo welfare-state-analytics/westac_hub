@@ -92,10 +92,9 @@ nuke:
 	-docker rm -fv `docker ps --all -q`
 	-docker images -q --filter "dangling=true" | xargs docker rmi
 
-requirements.txt: ../../Pipfile.lock
-	@wget -qO Pipfile.lock  https://raw.githubusercontent.com/welfare-state-analytics/welfare_state_analytics/master/Pipfile.lock
-	@jq -r '.default | to_entries[] | .key + .value.version' Pipfile.lock > requirements.txt
-	@if ! cmp -s ./requirements.txt inidun_lab/requirements.txt ; then \cp -f ./requirements.txt inidun_lab/requirements.txt; fi
-	@rm -f requirements.txt Pipfile.lock
+requirements.txt:
+	@wget -qO /tmp/requirements.txt  https://raw.githubusercontent.com/welfare-state-analytics/welfare_state_analytics/master/requirements.txt
+	@if ! cmp -s /tmp//requirements.txt westac_lab/requirements.txt ; then \cp -f ./requirements.txt westac_lab/requirements.txt; fi
+	@rm -f /tmp/requirements.txt
 
-.PHONY: bash clear_volumes clean down up follow build restart pull nuke network userlist
+.PHONY: requirements.txt bash clear_volumes clean down up follow build restart pull nuke network userlist
