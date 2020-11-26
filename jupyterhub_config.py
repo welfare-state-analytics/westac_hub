@@ -91,6 +91,9 @@ c.DockerSpawner.host_ip = "0.0.0.0"
 
 # c.DockerSpawner.links={network_name: network_name}
 
+#This line added by JvB since the containers spawned by jupyterhub will conflict with each other unless you give them a per-jupyter-installation unique name
+c.DockerSpawner.name_template = "jupyterhub-westac-{username}"
+
 c.Spawner.default_url = '/lab'
 # c.Spawner.cpu_limit = 1
 c.Spawner.mem_limit = '3G'

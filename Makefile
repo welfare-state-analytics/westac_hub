@@ -94,7 +94,7 @@ nuke:
 
 requirements.txt:
 	@wget -qO /tmp/requirements.txt  https://raw.githubusercontent.com/welfare-state-analytics/welfare_state_analytics/master/requirements.txt
-	@if ! cmp -s /tmp//requirements.txt westac_lab/requirements.txt ; then \cp -f ./requirements.txt westac_lab/requirements.txt; fi
+	@if ! cmp -s /tmp/requirements.txt westac_lab/requirements.txt ; then \cp -f /tmp/requirements.txt westac_lab/requirements.txt; fi
 	@rm -f /tmp/requirements.txt
 
 .PHONY: requirements.txt bash clear_volumes clean down up follow build restart pull nuke network userlist
