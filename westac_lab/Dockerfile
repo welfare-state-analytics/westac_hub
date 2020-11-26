@@ -75,8 +75,7 @@ RUN chmod +x /usr/local/bin/tini
 
 RUN python --version \
     && pip install --upgrade pip \
-    && pip install --upgrade jupyterhub==1.0.0 \
-    && exit 0
+    && pip install --upgrade jupyterhub==1.0.0
 
 RUN pip install humlab-westac \
     && jupyter labextension install \
@@ -85,16 +84,15 @@ RUN pip install humlab-westac \
         @bokeh/jupyter_bokeh \
         ipyaggrid \
         qgrid2 \
-        jupyterlab-jupytext \
-    && exit 0
+        jupyterlab-jupytext
 
 RUN \
     python -m nltk.downloader -d /usr/local/share/nltk_data stopwords punkt sentiwordnet \
     \
     && pip install spacy-lookups-data \
     && python -m spacy download en_core_web_sm \
-    && python -m spacy download en_core_web_md \
-    && exit 0
+    && python -m spacy download en_core_web_md
+    
 
 ENV NLTK_DATA=/usr/local/share/nltk_data
 
