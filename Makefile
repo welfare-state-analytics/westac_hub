@@ -1,11 +1,11 @@
-# Copyright (c) Jupyter Development Team.
+# Copyright (c) Humlab Development Team.
 # Distributed under the terms of the Modified BSD License.
 
 include .env
 
 .DEFAULT_GOAL=build
 
-build: check-files network volumes notebook_image
+build: check-files network volumes lab_image
 	docker-compose build
 
 rebuild: down clear_volumes build up
@@ -14,30 +14,13 @@ rebuild: down clear_volumes build up
 
 network:
 	@docker network inspect $(DOCKER_NETWORK_NAME) >/dev/null 2>&1 || docker network create $(DOCKER_NETWORK_NAME)
-    # docker network create --driver overlay $(DOCKER_NETWORK_NAME)
 
 volumes:
 	@docker volume inspect $(DATA_VOLUME_HOST) >/dev/null 2>&1 || docker volume create --name $(DATA_VOLUME_HOST)
-	# @docker volume inspect $(DB_VOLUME_HOST) >/dev/null 2>&1 || docker volume create --name $(DB_VOLUME_HOST)
-
-# self-signed-cert:
-# 	# make a self-signed cert
-
-# secrets/postgres.env:
-# 	@echo "Generating postgres password in $@"
-# 	@echo "POSTGRES_PASSWORD=$(shell openssl rand -hex 32)" > $@
 
 secrets/.env.oauth2:
 	@echo "File .env.oauth2 file is missing (GitHub parameters)"
 	@exit 1
-
-# secrets/jupyterhub.crt:
-# 	@echo "Need an SSL certificate in secrets/jupyterhub.crt"
-# 	@exit 1
-
-# secrets/jupyterhub.key:
-# 	@echo "Need an SSL key in secrets/jupyterhub.key"
-# 	@exit 1
 
 userlist:
 	@echo "Add usernames, one per line, to ./userlist, such as:"
@@ -45,31 +28,23 @@ userlist:
 	@echo "    wash"
 	@exit 1
 
-check-files: config/userlist secrets/.env.oauth2 # $(cert_files) secrets/postgres.env
+check-files: config/userlist secrets/.env.oauth2
 
-pull:
-	docker pull $(DOCKER_NOTEBOOK_IMAGE)
-
-text_base_image:
-	docker build -t rogermahler/humlab_text_base:latest -f westac_lab/Dockerfile.text_base westac_lab
-	docker login docker.io
-	docker push rogermahler/humlab_text_base:latest
-
-notebook_image:
-	@echo "Building image using penelope v$(PENELOPE_VERSION)"
-	docker build --build-arg PENELOPE_VERSION=$(PENELOPE_VERSION) -t $(LOCAL_NOTEBOOK_IMAGE):latest -f westac_lab/Dockerfile westac_lab
+lab_image:
+	@echo "Building lab image"
+	docker build --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(LOCAL_NOTEBOOK_IMAGE):$(LAB_BUILD_VERSION) -f $(LOCAL_NOTEBOOK_IMAGE)/Dockerfile $(LOCAL_NOTEBOOK_IMAGE)
 
 bash:
-	@docker exec -it -t westac_hub /bin/bash
+	@docker exec -it -t $(HUB_CONTAINER_NAME) /bin/bash
 
 bash_lab:
-	@docker exec -it -t `docker ps -f "ancestor=westac_lab" -q --all | head -1` /bin/bash
+	@docker exec -it -t `docker ps -f "ancestor=$(LOCAL_NOTEBOOK_IMAGE)" -q --all | head -1` /bin/bash
 
 clear_volumes:
-	-docker volume rm `docker volume ls -q | grep -E 'jupyterhub-user|jupyterhub-westac'`
+	-docker volume rm `docker volume ls -q | grep -E 'jupyterhub-westac'`
 
 clean: down
-	-docker rm `docker ps -f "ancestor=westac_lab" -q --all` >/dev/null 2>&1
+	-docker rm `docker ps -f "ancestor=$(LOCAL_NOTEBOOK_IMAGE)" -q --all` >/dev/null 2>&1
 	-docker rm `docker ps -f "ancestor=westac_jupyterhub" -q --all` >/dev/null 2>&1
 	@docker volume rm `docker volume ls -q`
 
@@ -80,10 +55,10 @@ up:
 	@docker-compose up -d
 
 follow:
-	@docker logs westac_hub --follow
+	@docker logs $(LOCAL_NOTEBOOK_IMAGE) --follow
 
 follow_lab:
-	@docker logs `docker ps -f "ancestor=westac_lab" -q --all | head -1` --follow
+	@docker logs `docker ps -f "ancestor=$(LOCAL_NOTEBOOK_IMAGE)" -q --all | head -1` --follow
 
 restart: down up follow
 
@@ -92,9 +67,5 @@ nuke:
 	-docker rm -fv `docker ps --all -q`
 	-docker images -q --filter "dangling=true" | xargs docker rmi
 
-requirements.txt:
-	@wget -qO /tmp/requirements.txt  https://raw.githubusercontent.com/welfare-state-analytics/welfare_state_analytics/master/requirements.txt
-	@if ! cmp -s /tmp/requirements.txt westac_lab/requirements.txt ; then \cp -f /tmp/requirements.txt westac_lab/requirements.txt; fi
-	@rm -f /tmp/requirements.txt
 
-.PHONY: requirements.txt bash clear_volumes clean down up follow build restart pull nuke network userlist
+.PHONY: bash clear_volumes clean down up follow build restart pull nuke network userlist

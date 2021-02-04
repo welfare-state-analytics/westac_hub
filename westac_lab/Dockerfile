@@ -11,6 +11,11 @@ ARG NB_PORT=8888
 ARG TINI_VERSION=v0.18.0
 ARG JUPYTERHUB_VERSION=1.0.0
 ARG JAVA_URL=https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08_openj9-0.18.1/OpenJDK8U-jre_x64_linux_openj9_8u242b08_openj9-0.18.1.tar.gz
+
+ARG GITHUB_ORG=welfare-state-analytics
+ARG GITHUB_REPOSITORY=welfare_state_analytics
+ARG PYPI_PACKAGE=humlab-westac
+
 ENV NB_PORT=${NB_PORT} \
     \
     NB_USER=$NB_USER \
@@ -74,27 +79,32 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/
 RUN chmod +x /usr/local/bin/tini
 
 RUN python --version \
+    && pip install llvmlite==0.34.0 \
     && pip install --upgrade pip \
     && pip install jupyterhub==1.0.0
 
-ADD https://raw.githubusercontent.com/welfare-state-analytics/welfare_state_analytics/master/requirements.txt requirements.txt
+ADD https://raw.githubusercontent.com/${GITHUB_ORG}/${GITHUB_REPOSITORY}/master/requirements.txt requirements.txt
+
+ARG PYPI_PACKAGE_VERSION=0.2.6
 
 RUN pip install -r requirements.txt \
-    && pip install humlab-westac \
-    && jupyter labextension install \
-        @jupyter-widgets/jupyterlab-manager \
-        jupyter-matplotlib \
-        @bokeh/jupyter_bokeh \
-        ipyaggrid \
-        qgrid2 \
-        jupyterlab-jupytext
+    && pip install ${PYPI_PACKAGE}==${PYPI_PACKAGE_VERSION}
 
 RUN \
     python -m nltk.downloader -d /usr/local/share/nltk_data stopwords punkt sentiwordnet \
     \
     && pip install spacy-lookups-data \
     && python -m spacy download en_core_web_sm \
-    && python -m spacy download en_core_web_md
+    && python -m spacy download en_core_web_md \
+    && python -m spacy link en_core_web_sm en --force \
+    && mkdir -p /data
+
+RUN jupyter labextension install \
+        @jupyter-widgets/jupyterlab-manager@2.0 \
+        jupyter-matplotlib@0.7.4 \
+        @bokeh/jupyter_bokeh \
+        ipyaggrid \
+        qgrid2
 
 ENV NLTK_DATA=/usr/local/share/nltk_data
 
@@ -109,18 +119,19 @@ USER $NB_USER
 WORKDIR $HOME
 
 RUN mkdir -p $HOME/work
-# $HOME/bin $HOME/.jupyter/lab
 
 WORKDIR $HOME/work
 
-ADD https://api.github.com/repos/welfare-state-analytics/welfare_state_analytics/git/refs/heads/master version.json
+ADD https://api.github.com/repos/${GITHUB_ORG}/${GITHUB_REPOSITORY}/git/refs/heads/master version.json
 
-RUN git clone https://github.com/welfare-state-analytics/welfare_state_analytics.git \
-    && cd welfare_state_analytics \
-    && rm -rf .git* .docker* .travis* Poetry* archive docker pytest* tests run* westac_hub Makefile requirements.txt setup.py NOTE.md
+RUN git clone https://github.com/${GITHUB_ORG}/${GITHUB_REPOSITORY}.git \
+    && cd ${GITHUB_REPOSITORY} \
+    && rm -rf tests scripts .git* .devcontainer* .flake* .pre* .pylint* .travis* .isort* .docker* \
+        *oetry* pyproject* pyright* pytest* run* \
+        Makefile requirements.txt NOTE*.md README*.md setup.py
 
+#COPY --chown=$NB_USER:users data $HOME/work/${GITHUB_REPOSITORY}/data
 #COPY user-settings  $HOME/.jupyter/lab/
 #COPY jupyter_notebook_config.py $HOME/.jupyter/
 
 CMD ["jupyterhub-singleuser"]
-
