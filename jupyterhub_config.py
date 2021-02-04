@@ -1,12 +1,12 @@
 # JupyterHub configuration
 #
-## If you update this file, do not forget to delete the `jupyterhub_data` volume before restarting the jupyterhub service:
+## If you update this file, do not forget to delete the `$(DATA_VOLUME_HOST)` volume before restarting the jupyterhub service:
 ##
-##     docker volume rm jupyterhub_jupyterhub_data
+##     docker volume rm $(DATA_VOLUME_HOST)
 ##
 ## or, if you changed the COMPOSE_PROJECT_NAME to <name>:
 ##
-##    docker volume rm <name>_jupyterhub_data
+##    docker volume rm <name>$(DATA_VOLUME_HOST)
 ##
 
 import os
@@ -80,7 +80,7 @@ c.DockerSpawner.network_name = network_name
 c.DockerSpawner.notebook_dir = '/home/jovyan/work' # notebook_dir
 #c.DockerSpawner.volumes = { 'jupyterhub-user-{username}': notebook_dir }
 c.DockerSpawner.volumes = {
-    'jupyterhub-user-{username}':'/home/jovyan/work',
+    'jupyterhub-westac-user-{username}':'/home/jovyan/work',
     '/data/westac': {               # path on host
         "bind": '/data/westac',     # path in docker instance
         "mode": "ro"
@@ -89,10 +89,10 @@ c.DockerSpawner.volumes = {
 c.DockerSpawner.remove_containers = True                                    # Remove containers once they are stopped
 c.DockerSpawner.host_ip = "0.0.0.0"
 
-# c.DockerSpawner.links={network_name: network_name}
-
 #This line added by JvB since the containers spawned by jupyterhub will conflict with each other unless you give them a per-jupyter-installation unique name
 c.DockerSpawner.name_template = "jupyterhub-westac-{username}"
+
+# c.DockerSpawner.links={network_name: network_name}
 
 c.Spawner.default_url = '/lab'
 # c.Spawner.cpu_limit = 1
