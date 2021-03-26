@@ -12,9 +12,9 @@ ARG TINI_VERSION=v0.18.0
 ARG JUPYTERHUB_VERSION=1.0.0
 ARG JAVA_URL=https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08_openj9-0.18.1/OpenJDK8U-jre_x64_linux_openj9_8u242b08_openj9-0.18.1.tar.gz
 
-ARG GITHUB_ORG=welfare-state-analytics
-ARG GITHUB_REPOSITORY=welfare_state_analytics
-ARG PYPI_PACKAGE=humlab-westac
+ARG GITHUB_ORG
+ARG GITHUB_REPOSITORY
+ARG PYPI_PACKAGE
 
 ENV NB_PORT=${NB_PORT} \
     \
@@ -79,13 +79,12 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/
 RUN chmod +x /usr/local/bin/tini
 
 RUN python --version \
-    && pip install llvmlite==0.34.0 \
     && pip install --upgrade pip \
     && pip install jupyterhub==1.0.0
 
 ADD https://raw.githubusercontent.com/${GITHUB_ORG}/${GITHUB_REPOSITORY}/master/requirements.txt requirements.txt
 
-ARG PYPI_PACKAGE_VERSION=0.2.6
+ARG PYPI_PACKAGE_VERSION
 
 RUN pip install -r requirements.txt \
     && pip install ${PYPI_PACKAGE}==${PYPI_PACKAGE_VERSION}
@@ -130,7 +129,7 @@ RUN git clone https://github.com/${GITHUB_ORG}/${GITHUB_REPOSITORY}.git \
         *oetry* pyproject* pyright* pytest* run* \
         Makefile requirements.txt NOTE*.md README*.md setup.py
 
-#COPY --chown=$NB_USER:users data $HOME/work/${GITHUB_REPOSITORY}/data
+COPY --chown=$NB_USER:users data $HOME/work/${GITHUB_REPOSITORY}/data
 #COPY user-settings  $HOME/.jupyter/lab/
 #COPY jupyter_notebook_config.py $HOME/.jupyter/
 
