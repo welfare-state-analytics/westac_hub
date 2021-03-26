@@ -32,7 +32,6 @@ services = [
 
 def get_ip():
     try:
-        #return public_ips()[0]
         docker0 = netifaces.ifaddresses('docker0')
         docker0_ipv4 = docker0[netifaces.AF_INET][0]
         return docker0_ipv4['addr']
@@ -56,31 +55,25 @@ c = get_config()
 
 c.JupyterHub.spawner_class = 'dockerspawner.DockerSpawner'
 c.JupyterHub.admin_access = True
-#c.JupyterHub.hub_port = 8000                                        # The public facing port of the proxy
-c.JupyterHub.hub_ip = '0.0.0.0' #os.environ['HUB_IP'] # get_ip()    # The public facing ip of the whole application (the proxy)
+c.JupyterHub.hub_ip = '0.0.0.0'  # The public facing ip of the whole application (the proxy)
 c.JupyterHub.hub_connect_ip = os.environ['HUB_IP']                  # The ip for this process
 
 c.JupyterHub.authenticator_class = oauthenticator.github.GitHubOAuthenticator
 c.JupyterHub.cookie_secret_file = os.path.join(data_dir, 'jupyterhub_cookie_secret')
-# c.JupyterHub.data_files_path = '/opt/conda/share/jupyterhub'
 
 c.GitHubOAuthenticator.oauth_callback_url = os.environ['OAUTH_CALLBACK_URL']
 c.GitHubOAuthenticator.client_id = os.environ['OAUTH_CLIENT_ID']
 c.GitHubOAuthenticator.client_secret = os.environ['OAUTH_CLIENT_SECRET']
 
-# c.PAMAuthenticator.open_sessions = False
-
 c.Authenticator.whitelist, c.Authenticator.admin_users = read_userlist()
 
 c.DockerSpawner.image = os.environ['DOCKER_JUPYTER_CONTAINER']
-# c.DockerSpawner.extra_create_kwargs.update({ 'command': spawn_cmd })
-#c.DockerSpawner.extra_host_config = { 'network_mode': network_name }       # Pass the network name as argument to spawned containers
 c.DockerSpawner.use_internal_ip = True
 c.DockerSpawner.network_name = network_name
 c.DockerSpawner.notebook_dir = '/home/jovyan/work' # notebook_dir
-#c.DockerSpawner.volumes = { 'jupyterhub-user-{username}': notebook_dir }
+
 c.DockerSpawner.volumes = {
-    'jupyterhub-westac-user-{username}':'/home/jovyan/work',
+    'jupyterhub-westac-user-{username}': '/home/jovyan/work',
     '/data/westac': {               # path on host
         "bind": '/data/westac',     # path in docker instance
         "mode": "ro"
@@ -89,7 +82,6 @@ c.DockerSpawner.volumes = {
 c.DockerSpawner.remove_containers = True                                    # Remove containers once they are stopped
 c.DockerSpawner.host_ip = "0.0.0.0"
 
-#This line added by JvB since the containers spawned by jupyterhub will conflict with each other unless you give them a per-jupyter-installation unique name
 c.DockerSpawner.name_template = "jupyterhub-westac-{username}"
 
 # c.DockerSpawner.links={network_name: network_name}
