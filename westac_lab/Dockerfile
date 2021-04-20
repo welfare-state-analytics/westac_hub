@@ -103,7 +103,8 @@ RUN jupyter labextension install \
         jupyter-matplotlib@0.7.4 \
         @bokeh/jupyter_bokeh \
         ipyaggrid \
-        qgrid2
+        qgrid2 \
+        @finos/perspective-jupyterlab
 
 ENV NLTK_DATA=/usr/local/share/nltk_data
 
