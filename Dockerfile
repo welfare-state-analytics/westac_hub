@@ -25,10 +25,9 @@ RUN pip install --upgrade pip && pip install \
     oauthenticator \
     jhub_cas_authenticator
 
-COPY config/userlist /srv/jupyterhub/userlist
-
-COPY jupyterhub_config.py /srv/jupyterhub/jupyterhub_config.py
+# COPY config/userlist /srv/jupyterhub/userlist
+# COPY jupyterhub_config.py /srv/jupyterhub/jupyterhub_config.py
 
 WORKDIR /srv
 
-CMD ["jupyterhub", "-f", "/srv/jupyterhub/jupyterhub_config.py"]
+CMD ["jupyterhub", "-f", "/etc/jupyterhub/jupyterhub_config.py"]

@@ -22,6 +22,8 @@ network_name = os.environ['DOCKER_NETWORK_NAME']
 spawn_cmd = os.environ.get('DOCKER_SPAWN_CMD', "start-singleuser.sh")
 notebook_dir = os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/humlab'
 data_dir = os.environ.get('DATA_VOLUME_CONTAINER', '/data')
+config_dir = os.environ.get('JUPYTERHUB_CONFIG_FOLDER', '/etc/jupyterhub')
+
 services = [
     {
         'name': 'cull_idle',
@@ -40,7 +42,7 @@ def get_ip():
 
 def read_userlist():
     whitelist, admin = set(), set()
-    filename = os.path.join(os.path.dirname(__file__), "userlist")
+    filename = os.path.join(config_dir, "userlist")
     assert os.path.isfile(filename), "userlist expected at {}".format(filename)
     with open(filename, "r") as fi:
         lines = [
@@ -76,7 +78,7 @@ c.DockerSpawner.volumes = {
     'jupyterhub-westac-user-{username}': '/home/jovyan/work',
     '/data/westac': {               # path on host
         "bind": '/data/westac',     # path in docker instance
-        "mode": "ro"
+        "mode": "rw"
     }
 }
 c.DockerSpawner.remove_containers = True                                    # Remove containers once they are stopped
