@@ -3,6 +3,8 @@
 
 include .env
 
+USER_VOLUMES=$(shell docker volume ls -q | grep -E 'jupyterhub-westac')
+
 .DEFAULT_GOAL=build
 
 build: check-files network volumes lab_image
@@ -47,8 +49,14 @@ bash:
 bash_lab:
 	@docker exec -it -t `docker ps -f "ancestor=$(LOCAL_NOTEBOOK_IMAGE)" -q --all | head -1` /bin/bash
 
+
+
+.ONESHELL:
 clear_volumes:
-	-docker volume rm `docker volume ls -q | grep -E 'jupyterhub-westac'`
+	@if [ "$(USER_VOLUMES)" != "" ]; then \
+		echo "Removing user volumes: $(USER_VOLUMES)" ; \
+		docker volume rm $(USER_VOLUMES) ; \
+	fi
 
 clean: down
 	-docker rm `docker ps -f "ancestor=$(LOCAL_NOTEBOOK_IMAGE)" -q --all` >/dev/null 2>&1
