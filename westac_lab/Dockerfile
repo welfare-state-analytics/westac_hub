@@ -128,8 +128,8 @@ ADD https://api.github.com/repos/${GITHUB_ORG}/${GITHUB_REPOSITORY}/git/refs/hea
 RUN git clone https://github.com/${GITHUB_ORG}/${GITHUB_REPOSITORY}.git \
     && cd ${GITHUB_REPOSITORY} \
     && rm -rf tests scripts .git* .devcontainer* .flake* .pre* .pylint* .travis* .isort* .docker* \
-        *oetry* pyproject* pyright* pytest* run* \
-        Makefile requirements.txt NOTE*.md README*.md setup.py
+        *oetry* pyproject* pyright* pytest* run* environment.yml westac \
+        Makefile requirements.txt NOTE*.md README*.md setup.py ipynb2py.sh
 
 COPY --chown=$NB_USER:users data $HOME/work/${GITHUB_REPOSITORY}/data
 #COPY user-settings  $HOME/.jupyter/lab/
