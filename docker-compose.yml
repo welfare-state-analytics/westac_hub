@@ -15,8 +15,8 @@ services:
     restart: on-failure
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:rw"
-      - "jupyterhub_data:${DATA_VOLUME_CONTAINER}"
-      - ${HOST_CONFIG_FOLDER}:/etc/jupyterhub
+      - "jupyterhub_data:${DATA_VOLUME_CONTAINER}:rw"
+      - ${HOST_CONFIG_FOLDER}:${JUPYTERHUB_CONFIG_FOLDER}
       - "/etc/shadow:/etc/shadow"
       - "/etc/passwd:/etc/passwd"
       - "/etc/pam.d:/etc/pam.d"
@@ -32,7 +32,7 @@ services:
       - "traefik.frontend.rule=Host:${FRONTEND_HOST}"
       - "traefik.docker.network=${DOCKER_NETWORK_NAME}"
     command: >
-        jupyterhub -f /srv/jupyterhub/jupyterhub_config.py
+        jupyterhub -f ${JUPYTERHUB_CONFIG_FOLDER}/jupyterhub_config.py
 
 
 volumes:
