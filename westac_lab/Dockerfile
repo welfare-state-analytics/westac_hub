@@ -82,12 +82,9 @@ RUN python --version \
     && pip install --quiet --upgrade pip \
     && pip install --quiet jupyterhub==1.0.0
 
-ADD https://raw.githubusercontent.com/${GITHUB_ORG}/${GITHUB_REPOSITORY}/master/requirements.txt requirements.txt
-
 ARG PYPI_PACKAGE_VERSION
 
-RUN pip install --quiet -r requirements.txt \
-    && pip install --quiet ${PYPI_PACKAGE}==${PYPI_PACKAGE_VERSION}
+RUN pip install --quiet ${PYPI_PACKAGE}==${PYPI_PACKAGE_VERSION}
 
 RUN \
     python -m nltk.downloader -d /usr/local/share/nltk_data stopwords punkt sentiwordnet \
