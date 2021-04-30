@@ -21,7 +21,7 @@ RUN pip install --upgrade pip \
         jupyterhub-idle-culler \
         psycopg2-binary \
         netifaces \
-        git+https://github.com/jupyterhub/dockerspawner.git \
+        dockerspawner \
         oauthenticator \
         jhub_cas_authenticator
 
