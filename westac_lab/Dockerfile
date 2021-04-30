@@ -95,13 +95,7 @@ RUN \
     && python -m spacy link en_core_web_sm en --force \
     && mkdir -p /data
 
-RUN jupyter labextension install \
-        @jupyter-widgets/jupyterlab-manager@2.0 \
-        jupyter-matplotlib@0.9.0 \
-        @bokeh/jupyter_bokeh@2.0.4 \
-        jupyter-cytoscape@1.1.0 \
-        ipyaggrid \
-        @finos/perspective-jupyterlab
+RUN jupyter labextension install ipyaggrid @finos/perspective-jupyterlab
 
 ENV NLTK_DATA=/usr/local/share/nltk_data
 
