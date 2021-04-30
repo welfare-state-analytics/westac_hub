@@ -16,18 +16,17 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
     && apt-get clean && rm -rf /var/lib/apt/lists/*  && hash -r
 
 
-RUN wget https://raw.githubusercontent.com/jupyterhub/jupyterhub/0.9.3/examples/cull-idle/cull_idle_servers.py
-
-RUN pip install --upgrade pip && pip install \
-    psycopg2-binary \
-    netifaces \
-    git+https://github.com/jupyterhub/dockerspawner.git \
-    oauthenticator \
-    jhub_cas_authenticator
-
-# COPY config/userlist /srv/jupyterhub/userlist
-# COPY jupyterhub_config.py /srv/jupyterhub/jupyterhub_config.py
+RUN pip install --upgrade pip \
+    && pip install --quiet \
+        jupyterhub-idle-culler \
+        psycopg2-binary \
+        netifaces \
+        git+https://github.com/jupyterhub/dockerspawner.git \
+        oauthenticator \
+        jhub_cas_authenticator
 
 WORKDIR /srv
 
 CMD ["jupyterhub", "-f", "/etc/jupyterhub/jupyterhub_config.py"]
+
+# FIXME #2 Upgrade JupyterHub

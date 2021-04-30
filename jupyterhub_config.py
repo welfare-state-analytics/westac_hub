@@ -10,6 +10,7 @@
 ##
 
 import os
+import sys
 import oauthenticator
 import netifaces
 
@@ -24,12 +25,16 @@ notebook_dir = os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/humlab'
 data_dir = os.environ.get('DATA_VOLUME_CONTAINER', '/data')
 config_dir = os.environ.get('JUPYTERHUB_CONFIG_FOLDER', '/etc/jupyterhub')
 
-services = [
+c.JupyterHub.services = [
     {
-        'name': 'cull_idle',
+        'name': 'idle-culler',
         'admin': True,
-        'command': 'python3 /srv/jupyterhub/cull_idle_servers.py --timeout=3600'.split(),
-    },
+        'command': [
+            sys.executable,
+            '-m', 'jupyterhub_idle_culler',
+            '--timeout=3600'
+        ],
+    }
 ]
 
 def get_ip():
@@ -57,8 +62,8 @@ c = get_config()
 
 c.JupyterHub.spawner_class = 'dockerspawner.DockerSpawner'
 c.JupyterHub.admin_access = True
-c.JupyterHub.hub_ip = '0.0.0.0'  # The public facing ip of the whole application (the proxy)
-c.JupyterHub.hub_connect_ip = os.environ['HUB_IP']                  # The ip for this process
+c.JupyterHub.hub_ip = '0.0.0.0'                                             # The public facing ip of the whole application (the proxy)
+c.JupyterHub.hub_connect_ip = os.environ['HUB_IP']                          # The ip for this process
 
 c.JupyterHub.authenticator_class = oauthenticator.github.GitHubOAuthenticator
 c.JupyterHub.cookie_secret_file = os.path.join(data_dir, 'jupyterhub_cookie_secret')
@@ -72,12 +77,12 @@ c.Authenticator.whitelist, c.Authenticator.admin_users = read_userlist()
 c.DockerSpawner.image = os.environ['DOCKER_JUPYTER_CONTAINER']
 c.DockerSpawner.use_internal_ip = True
 c.DockerSpawner.network_name = network_name
-c.DockerSpawner.notebook_dir = '/home/jovyan/work' # notebook_dir
+c.DockerSpawner.notebook_dir = '/home/jovyan/work'                          # notebook_dir
 
 c.DockerSpawner.volumes = {
     'jupyterhub-westac-user-{username}': '/home/jovyan/work',
-    '/data/westac': {               # path on host
-        "bind": '/data/westac',     # path in docker instance
+    '/data/westac': {                                                       # path on host
+        "bind": '/data/westac',                                             # path in docker instance
         "mode": "rw"
     }
 }
