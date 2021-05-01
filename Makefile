@@ -7,18 +7,18 @@ USER_VOLUMES=$(shell docker volume ls -q | grep -E 'jupyterhub-westac')
 
 .DEFAULT_GOAL=build
 
-build: check-files network volumes lab_image
-	docker-compose build
+build: check-files network volumes lab-image hub-image
+	@echo "Build done"
 
-rebuild: down clear_volumes build up
+rebuild: down clear-volumes build up
 	@echo "Rebuild done"
 	@exit 0
 
 network:
-	@docker network inspect $(DOCKER_NETWORK_NAME) >/dev/null 2>&1 || docker network create $(DOCKER_NETWORK_NAME)
+	@docker network inspect $(HUB_NETWORK_NAME) >/dev/null 2>&1 || docker network create $(HUB_NETWORK_NAME)
 
 volumes:
-	@docker volume inspect $(DATA_VOLUME_HOST) >/dev/null 2>&1 || docker volume create --name $(DATA_VOLUME_HOST)
+	@docker volume inspect $(HUB_HOST_VOLUME_NAME) >/dev/null 2>&1 || docker volume create --name $(HUB_HOST_VOLUME_NAME)
 
 secrets/.env.oauth2:
 	@echo "File .env.oauth2 file is missing (GitHub parameters)"
@@ -32,34 +32,37 @@ userlist:
 
 check-files: config/userlist secrets/.env.oauth2
 
-lab_image:
+hub-image:
+	@docker-compose build
+	@docker tag $(HUB_IMAGE_NAME):latest $(HUB_IMAGE_NAME):$(PYPI_PACKAGE_VERSION)
+
+lab-image:
 	@echo "Building lab image"
 	docker build \
 		--build-arg PYPI_PACKAGE=$(PYPI_PACKAGE) \
 		--build-arg PYPI_PACKAGE_VERSION=$(PYPI_PACKAGE_VERSION) \
 		--build-arg GITHUB_ORG=$(GITHUB_ORG) \
 		--build-arg GITHUB_REPOSITORY=$(GITHUB_REPOSITORY) \
-		-t $(LOCAL_NOTEBOOK_IMAGE):latest \
-		-t $(LOCAL_NOTEBOOK_IMAGE):$(PYPI_PACKAGE_VERSION) \
-		-f $(LOCAL_NOTEBOOK_IMAGE)/Dockerfile $(LOCAL_NOTEBOOK_IMAGE)
+		--build-arg JUPYTERHUB_VERSION=$(JUPYTERHUB_VERSION) \
+		-t $(LAB_IMAGE_NAME):latest \
+		-t $(LAB_IMAGE_NAME):$(PYPI_PACKAGE_VERSION) \
+		-f $(LAB_IMAGE_NAME)/Dockerfile $(LAB_IMAGE_NAME)
 
-bash:
+bash-hub:
 	@docker exec -it -t $(HUB_CONTAINER_NAME) /bin/bash
 
-bash_lab:
-	@docker exec -it -t `docker ps -f "ancestor=$(LOCAL_NOTEBOOK_IMAGE)" -q --all | head -1` /bin/bash
-
-
+bash-lab:
+	@docker exec -it -t `docker ps -f "ancestor=$(LAB_IMAGE_NAME)" -q --all | head -1` /bin/bash
 
 .ONESHELL:
-clear_volumes:
+clear-volumes:
 	@if [ "$(USER_VOLUMES)" != "" ]; then \
 		echo "Removing user volumes: $(USER_VOLUMES)" ; \
 		docker volume rm $(USER_VOLUMES) ; \
 	fi
 
 clean: down
-	-docker rm `docker ps -f "ancestor=$(LOCAL_NOTEBOOK_IMAGE)" -q --all` >/dev/null 2>&1
+	-docker rm `docker ps -f "ancestor=$(LAB_IMAGE_NAME)" -q --all` >/dev/null 2>&1
 	-docker rm `docker ps -f "ancestor=westac_jupyterhub" -q --all` >/dev/null 2>&1
 	@docker volume rm `docker volume ls -q`
 
@@ -69,11 +72,11 @@ down:
 up:
 	@docker-compose up -d
 
-follow:
-	@docker logs $(LOCAL_NOTEBOOK_IMAGE) --follow
+follow-hub:
+	@docker logs $(LAB_IMAGE_NAME) --follow
 
-follow_lab:
-	@docker logs `docker ps -f "ancestor=$(LOCAL_NOTEBOOK_IMAGE)" -q --all | head -1` --follow
+follow-lab:
+	@docker logs `docker ps -f "ancestor=$(LAB_IMAGE_NAME)" -q --all | head -1` --follow
 
 restart: down up follow
 
@@ -82,5 +85,8 @@ nuke:
 	-docker rm -fv `docker ps --all -q`
 	-docker images -q --filter "dangling=true" | xargs docker rmi
 
-
-.PHONY: bash clear_volumes clean down up follow build restart pull nuke network userlist
+.PHONY: bash-hub bash-lab follow-hub follow-lab
+.PHONY: clear-volumes clean
+.PHONY: down up build restart network userlist
+.PHONY: lab-image hub-image
+.PHONY: nuke

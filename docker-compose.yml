@@ -8,39 +8,39 @@ services:
       dockerfile: Dockerfile
       args:
         JUPYTERHUB_VERSION: ${JUPYTERHUB_VERSION}
-    image: ${JUPYTERHUB_IMAGE_NAME}
+    image: ${HUB_IMAGE_NAME}:latest
     ports:
       - "3001:8000"
     container_name: ${HUB_CONTAINER_NAME}
     restart: on-failure
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:rw"
-      - "jupyterhub_data:${DATA_VOLUME_CONTAINER}:rw"
-      - ${HOST_CONFIG_FOLDER}:${JUPYTERHUB_CONFIG_FOLDER}
+      - "jupyterhub_data:${HUB_HOST_VOLUME_FOLDER}:rw"
+      - ${HUB_HOST_CONFIG_FOLDER}:${HUB_CONFIG_FOLDER}
       - "/etc/shadow:/etc/shadow"
       - "/etc/passwd:/etc/passwd"
       - "/etc/pam.d:/etc/pam.d"
     environment:
-      DOCKER_JUPYTER_CONTAINER: ${LOCAL_NOTEBOOK_IMAGE}
+      DOCKER_JUPYTER_CONTAINER: ${LAB_IMAGE_NAME}
       HUB_IP: ${HUB_CONTAINER_NAME}
-      DOCKER_NETWORK_NAME: ${DOCKER_NETWORK_NAME}
+      HUB_NETWORK_NAME: ${HUB_NETWORK_NAME}
     env_file:
       - ./secrets/.env.oauth2
       - ./.env
     labels:
       - "traefik.enable=true"
-      - "traefik.frontend.rule=Host:${FRONTEND_HOST}"
-      - "traefik.docker.network=${DOCKER_NETWORK_NAME}"
+      - "traefik.frontend.rule=Host:${HUB_FRONTEND_HOST}"
+      - "traefik.docker.network=${HUB_NETWORK_NAME}"
     command: >
-        jupyterhub -f ${JUPYTERHUB_CONFIG_FOLDER}/jupyterhub_config.py
+        jupyterhub -f ${HUB_CONFIG_FOLDER}/jupyterhub_config.py
 
 
 volumes:
     jupyterhub_data:
         external:
-          name: "${DATA_VOLUME_HOST}"
+          name: "${HUB_HOST_VOLUME_NAME}"
 
 networks:
     default:
       external:
-        name: ${DOCKER_NETWORK_NAME}
+        name: ${HUB_NETWORK_NAME}
