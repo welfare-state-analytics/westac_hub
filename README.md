@@ -2,6 +2,12 @@
 
 This JupyterHub setup is based on this [blog post](https://opendreamkit.org/2018/10/17/jupyterhub-docker/) and the [The Littlest JupyterHub](https://the-littlest-jupyterhub.readthedocs.io/en/latest/).
 
+FIXME: #5 Upgrade JupyterHub to 1.4
+FIXME: #6 Give environment variables more descriptive names
+FIXME: #7 Reduce lab image size
+FIXME: #8 Remove unused hub dependencies
+FIXME: #9 Add version tag to hub image
+
 ## Features
 
 - Uses [DockerSpawner](https://github.com/jupyterhub/dockerspawner);
