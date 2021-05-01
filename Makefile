@@ -7,18 +7,20 @@ USER_VOLUMES=$(shell docker volume ls -q | grep -E 'jupyterhub-westac')
 
 .DEFAULT_GOAL=build
 
-build: check-files network volumes lab-image hub-image
+build: check-files network host-volume lab-image hub-image
 	@echo "Build done"
 
-rebuild: down clear-volumes build up
+rebuild: down clear-user-volumes build up
 	@echo "Rebuild done"
 	@exit 0
 
 network:
 	@docker network inspect $(HUB_NETWORK_NAME) >/dev/null 2>&1 || docker network create $(HUB_NETWORK_NAME)
 
-volumes:
+host-volume:
 	@docker volume inspect $(HUB_HOST_VOLUME_NAME) >/dev/null 2>&1 || docker volume create --name $(HUB_HOST_VOLUME_NAME)
+	@echo "info: remember to clear host volume if jupyterhub_config.py has been changed!"
+	# docker volume rm $(HUB_HOST_VOLUME_NAME)
 
 secrets/.env.oauth2:
 	@echo "File .env.oauth2 file is missing (GitHub parameters)"
@@ -55,7 +57,7 @@ bash-lab:
 	@docker exec -it -t `docker ps -f "ancestor=$(LAB_IMAGE_NAME)" -q --all | head -1` /bin/bash
 
 .ONESHELL:
-clear-volumes:
+clear-user-volumes:
 	@if [ "$(USER_VOLUMES)" != "" ]; then \
 		echo "Removing user volumes: $(USER_VOLUMES)" ; \
 		docker volume rm $(USER_VOLUMES) ; \
@@ -86,7 +88,7 @@ nuke:
 	-docker images -q --filter "dangling=true" | xargs docker rmi
 
 .PHONY: bash-hub bash-lab follow-hub follow-lab
-.PHONY: clear-volumes clean
-.PHONY: down up build restart network userlist
+.PHONY: clear-user-volumes clean
+.PHONY: down up build restart network userlist host-volume
 .PHONY: lab-image hub-image
 .PHONY: nuke
