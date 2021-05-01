@@ -1,15 +1,13 @@
 ARG JUPYTERHUB_VERSION
 
 FROM jupyterhub/jupyterhub:${JUPYTERHUB_VERSION}
-#$JUPYTERHUB_VERSION
 
-# Update and install some package
 RUN apt-get update && apt-get install -yq --no-install-recommends \
-	vim git curl wget  \
+	vim git wget  \
     libmemcached-dev \
     libsqlite3-dev \
     libzmq3-dev \
-    make nodejs node-gyp npm \
+    # make node-gyp \
     pandoc \
     sqlite3 \
     zlib1g-dev \
@@ -19,14 +17,10 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
 RUN pip install --upgrade pip \
     && pip install --quiet \
         jupyterhub-idle-culler \
-        psycopg2-binary \
-        netifaces \
+        # psycopg2-binary \
         dockerspawner \
-        oauthenticator \
-        jhub_cas_authenticator
+        oauthenticator
 
 WORKDIR /srv
 
 CMD ["jupyterhub", "-f", "/etc/jupyterhub/jupyterhub_config.py"]
-
-# FIXME #2 Upgrade JupyterHub
