@@ -9,7 +9,7 @@ ARG NB_GID="100"
 ARG NB_PORT=8888
 
 ARG TINI_VERSION=v0.18.0
-ARG JUPYTERHUB_VERSION=1.0.0
+ARG JUPYTERHUB_VERSION
 ARG JAVA_URL=https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08_openj9-0.18.1/OpenJDK8U-jre_x64_linux_openj9_8u242b08_openj9-0.18.1.tar.gz
 
 ARG GITHUB_ORG
@@ -80,7 +80,7 @@ RUN chmod +x /usr/local/bin/tini
 
 RUN python --version \
     && pip install --quiet --upgrade pip \
-    && pip install --quiet jupyterhub==1.0.0
+    && pip install --quiet jupyterhub==${JUPYTERHUB_VERSION}
 
 ARG PYPI_PACKAGE_VERSION
 
@@ -97,6 +97,7 @@ RUN \
 
 RUN jupyter labextension install ipyaggrid @finos/perspective-jupyterlab
 
+
 ENV NLTK_DATA=/usr/local/share/nltk_data
 
 ENTRYPOINT ["tini", "-g", "--"]
@@ -104,6 +105,12 @@ ENTRYPOINT ["tini", "-g", "--"]
 RUN adduser $NB_USER --uid $NB_UID --gid $NB_GID --disabled-password --gecos '' --shell /bin/bash \
     && adduser $NB_USER sudo \
     && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+RUN  npm cache clean --force \
+    && jupyter lab clean \
+    && pip cache purge
+
+# root@2321233364af:/usr/local/lib/python3.8/site-packages# du -s spacy_lookups_data/data/* | sort -n
 
 ENV HOME=/home/$NB_USER
 USER $NB_USER
@@ -122,7 +129,5 @@ RUN git clone https://github.com/${GITHUB_ORG}/${GITHUB_REPOSITORY}.git \
         Makefile requirements.txt NOTE*.md README*.md setup.py ipynb2py.sh
 
 COPY --chown=$NB_USER:users data $HOME/work/${GITHUB_REPOSITORY}/data
-#COPY user-settings  $HOME/.jupyter/lab/
-#COPY jupyter_notebook_config.py $HOME/.jupyter/
 
 CMD ["jupyterhub-singleuser"]
