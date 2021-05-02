@@ -3,10 +3,10 @@ FROM python:3.8.5-slim-buster
 # Notice: part of this code is from jupyter project
 LABEL MAINTAINER Roger Mähler <roger dot mahler at umu dot se>
 
-ARG NB_USER="jovyan"
-ARG NB_UID="1000"
-ARG NB_GID="100"
-ARG NB_PORT=8888
+ARG LAB_USER="jovyan"
+ARG LAB_UID="1000"
+ARG LAB_GID="100"
+ARG LAB_PORT=8888
 
 ARG TINI_VERSION=v0.18.0
 ARG JUPYTERHUB_VERSION
@@ -16,11 +16,11 @@ ARG GITHUB_ORG
 ARG GITHUB_REPOSITORY
 ARG PYPI_PACKAGE
 
-ENV NB_PORT=${NB_PORT} \
+ENV LAB_PORT=${LAB_PORT} \
     \
-    NB_USER=$NB_USER \
-    NB_UID=$NB_UID \
-    NB_GID=$NB_GID \
+    LAB_USER=$LAB_USER \
+    LAB_UID=$LAB_UID \
+    LAB_GID=$LAB_GID \
     \
     SHELL=/bin/bash \
     DEBIAN_FRONTEND=noninteractive
@@ -102,8 +102,8 @@ ENV NLTK_DATA=/usr/local/share/nltk_data
 
 ENTRYPOINT ["tini", "-g", "--"]
 
-RUN adduser $NB_USER --uid $NB_UID --gid $NB_GID --disabled-password --gecos '' --shell /bin/bash \
-    && adduser $NB_USER sudo \
+RUN adduser $LAB_USER --uid $LAB_UID --gid $LAB_GID --disabled-password --gecos '' --shell /bin/bash \
+    && adduser $LAB_USER sudo \
     && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 RUN  npm cache clean --force \
@@ -112,10 +112,10 @@ RUN  npm cache clean --force \
 
 # root@2321233364af:/usr/local/lib/python3.8/site-packages# du -s spacy_lookups_data/data/* | sort -n
 
-EXPOSE ${NB_PORT}
+EXPOSE ${LAB_PORT}
 
-ENV HOME=/home/$NB_USER
-USER $NB_USER
+ENV HOME=/home/$LAB_USER
+USER $LAB_USER
 WORKDIR $HOME
 
 RUN mkdir -p $HOME/work
@@ -130,8 +130,8 @@ RUN git clone https://github.com/${GITHUB_ORG}/${GITHUB_REPOSITORY}.git \
         *oetry* pyproject* pyright* pytest* run* environment.yml westac \
         Makefile requirements.txt NOTE*.md README*.md setup.py ipynb2py.sh
 
-COPY --chown=$NB_USER:users data $HOME/work/${GITHUB_REPOSITORY}/data
+COPY --chown=$LAB_USER:users data $HOME/work/${GITHUB_REPOSITORY}/data
 
 # CMD ["jupyterhub-singleuser"]
-# CMD jupyter lab --ip=* --port=${NB_PORT} --no-browser --notebook-dir=$HOME/work --allow-root
-CMD jupyter lab --ip=* --port=${NB_PORT} --no-browser --allow-root
+# CMD jupyter lab --ip=* --port=${LAB_PORT} --no-browser --notebook-dir=$HOME/work --allow-root
+CMD jupyter lab --ip=* --port=${LAB_PORT} --no-browser --allow-root
