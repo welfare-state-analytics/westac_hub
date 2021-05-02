@@ -112,6 +112,8 @@ RUN  npm cache clean --force \
 
 # root@2321233364af:/usr/local/lib/python3.8/site-packages# du -s spacy_lookups_data/data/* | sort -n
 
+EXPOSE ${NB_PORT}
+
 ENV HOME=/home/$NB_USER
 USER $NB_USER
 WORKDIR $HOME
@@ -130,4 +132,6 @@ RUN git clone https://github.com/${GITHUB_ORG}/${GITHUB_REPOSITORY}.git \
 
 COPY --chown=$NB_USER:users data $HOME/work/${GITHUB_REPOSITORY}/data
 
-CMD ["jupyterhub-singleuser"]
+# CMD ["jupyterhub-singleuser"]
+# CMD jupyter lab --ip=* --port=${NB_PORT} --no-browser --notebook-dir=$HOME/work --allow-root
+CMD jupyter lab --ip=* --port=${NB_PORT} --no-browser --allow-root
