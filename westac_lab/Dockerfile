@@ -1,4 +1,4 @@
-FROM python:3.8.5-slim-buster
+FROM ubuntu:focal-20210416
 
 # Notice: part of this code is from jupyter project
 LABEL MAINTAINER Roger Mähler <roger dot mahler at umu dot se>
@@ -10,20 +10,18 @@ ARG LAB_PORT=8888
 
 ARG TINI_VERSION=v0.18.0
 ARG JUPYTERHUB_VERSION
-ARG JAVA_URL=https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08_openj9-0.18.1/OpenJDK8U-jre_x64_linux_openj9_8u242b08_openj9-0.18.1.tar.gz
 
 ARG GITHUB_ORG
 ARG GITHUB_REPOSITORY
 ARG PYPI_PACKAGE
 
 ENV LAB_PORT=${LAB_PORT} \
-    \
     LAB_USER=$LAB_USER \
     LAB_UID=$LAB_UID \
-    LAB_GID=$LAB_GID \
-    \
-    SHELL=/bin/bash \
-    DEBIAN_FRONTEND=noninteractive
+    LAB_GID=$LAB_GID
+
+ENV SHELL=/bin/bash
+ENV DEBIAN_FRONTEND=noninteractive
 
 USER root
 
@@ -33,46 +31,27 @@ RUN set -ex; \
     \
     && mkdir -p /usr/share/man/man1 \
     && apt-get install -y -qq --no-install-recommends apt-utils \
-        locales \
-        build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev  \
-        software-properties-common \
-        wget curl zip unzip bzip2 llvm libncurses5-dev \
-        git vim \
-        ca-certificates \
-        netbase netcat \
-        sudo \
-        fonts-liberation \
-        \
-        r-base r-base-dev libopenblas-base > /dev/null \
-    \
-    && curl -sSL https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash \
-    && curl -sSL https://deb.nodesource.com/setup_12.x | bash - \
-    && apt-get install -y -qq nodejs \
+        sudo locales software-properties-common \
+        build-essential \
+        wget curl zip unzip bzip2 llvm git vim gnupg \
+        libssl-dev libopenblas-base zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev  \
+        libncurses5-dev ca-certificates netbase netcat \
+        python3 \
+        python3-dev \
+        python3-pip \
+        python3-pycurl \
+        python3-venv \
+        nodejs npm yarn \
+        fonts-liberation > /dev/null \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /usr/lib/jvm \
-    && cd /usr/lib/jvm \
-    && wget -q $JAVA_URL -O OpenJDK8U-jre_x64_linux.tar.gz \
-    && tar xf OpenJDK8U-jre_x64_linux.tar.gz \
-    && rm -f OpenJDK8U-jre_x64_linux.tar.gz \
-    && ln -s /usr/lib/jvm/jdk8u242-b08-jre/bin/java /usr/local/bin/java
-
-ENV PATH=/usr/local/bin:$PATH
-ENV JAVA_HOME=/usr/lib/jvm/jdk8u242-b08-jre
-
-WORKDIR /tmp
-
-RUN npm install npm@latest -g \
-    \
-    && npm install -g n \
-    && npm cache clean -f \
-    && npm config set progress false \
-    && npm config set registry http://registry.npmjs.org/ \
-    && npm i -g zeromq --unsafe-perm \
-    && npm install -g node-gyp \
-    \
+    && npm install n -g \
     && n stable
+
+RUN python3.8 -m venv /venv
+
+ENV PATH=/venv/bin:/usr/local/bin:$PATH
 
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/local/bin/tini
 
@@ -96,7 +75,6 @@ RUN \
     && mkdir -p /data
 
 RUN jupyter labextension install ipyaggrid @finos/perspective-jupyterlab
-
 
 ENV NLTK_DATA=/usr/local/share/nltk_data
 
