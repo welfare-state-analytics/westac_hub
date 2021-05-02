@@ -50,6 +50,21 @@ lab-image:
 		-t $(LAB_IMAGE_NAME):$(PYPI_PACKAGE_VERSION) \
 		-f $(LAB_IMAGE_NAME)/Dockerfile $(LAB_IMAGE_NAME)
 
+lab-test-image:
+	@echo "Building lab image"
+	docker build \
+		--build-arg PYPI_PACKAGE=$(PYPI_PACKAGE) \
+		--build-arg PYPI_PACKAGE_VERSION=$(PYPI_PACKAGE_VERSION) \
+		--build-arg GITHUB_ORG=$(GITHUB_ORG) \
+		--build-arg GITHUB_REPOSITORY=$(GITHUB_REPOSITORY) \
+		--build-arg JUPYTERHUB_VERSION=$(JUPYTERHUB_VERSION) \
+		-t westac_test_lab:test \
+		-f $(LAB_IMAGE_NAME)/Dockerfile $(LAB_IMAGE_NAME)
+
+run-lab-test-image:
+	@echo "Building lab image"
+	docker run --rm -p 8888:8888 --mount "type=bind,source=/data,target=/data" westac_test_lab:test
+
 bash-hub:
 	@docker exec -it -t $(HUB_CONTAINER_NAME) /bin/bash
 
