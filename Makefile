@@ -3,8 +3,6 @@
 
 include .env
 
-USER_VOLUMES=$(shell docker volume ls -q | grep -E 'jupyterhub-westac')
-
 .DEFAULT_GOAL=build
 
 build: check-files network host-volume lab-image hub-image
@@ -60,12 +58,21 @@ bash-hub:
 bash-lab:
 	@docker exec -it -t `docker ps -f "ancestor=$(LAB_IMAGE_NAME)" -q --all | head -1` /bin/bash
 
+USER_VOLUMES=$(shell docker volume ls -q | grep -E 'jupyterhub-$(PROJECT_NAME)')
+USER_VOLUMES_BACKUP_NAME="jupyterhub-$(PROJECT_NAME)-user-volumes-"`date '+%Y%m%d-%H%M'`.tar.gz
+
 .ONESHELL:
-clear-user-volumes:
+clear-user-volumes: backup-user-volumes
 	@if [ "$(USER_VOLUMES)" != "" ]; then \
 		echo "Removing user volumes: $(USER_VOLUMES)" ; \
 		docker volume rm $(USER_VOLUMES) ; \
 	fi
+
+.ONESHELL:
+backup-user-volumes:
+	@echo "Backing up to $(USER_VOLUMES_BACKUP_NAME)"
+	@find /var/lib/docker/volumes -maxdepth 1 -mindepth 1 -name "*$(PROJECT_NAME)*" -not -type l -print | \
+		tar -czvf $(USER_VOLUMES_BACKUP_NAME) --files-from=- >/dev/null 2>&1
 
 clean: down
 	-docker rm `docker ps -f "ancestor=$(LAB_IMAGE_NAME)" -q --all` >/dev/null 2>&1
@@ -96,3 +103,6 @@ nuke:
 .PHONY: down up build restart network userlist host-volume
 .PHONY: lab-image hub-image
 .PHONY: nuke
+
+
+
