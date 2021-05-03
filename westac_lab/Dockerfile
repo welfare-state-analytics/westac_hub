@@ -110,6 +110,5 @@ RUN git clone https://github.com/${GITHUB_ORG}/${GITHUB_REPOSITORY}.git \
 
 COPY --chown=$LAB_USER:users data $HOME/work/${GITHUB_REPOSITORY}/data
 
-# CMD ["jupyterhub-singleuser"]
-# CMD jupyter lab --ip=* --port=${LAB_PORT} --no-browser --notebook-dir=$HOME/work --allow-root
-CMD jupyter lab --ip=* --port=${LAB_PORT} --no-browser --allow-root
+CMD ["jupyterhub-singleuser"]
+# CMD jupyter lab --ip=* --port=${LAB_PORT} --no-browser --allow-root
