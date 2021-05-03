@@ -3,3 +3,4 @@ secrets
 config
 acme.json
 *.toml
+*.tar.gz
