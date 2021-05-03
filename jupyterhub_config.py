@@ -91,7 +91,7 @@ c.DockerSpawner.name_template = "jupyterhub-westac-{username}"
 
 c.Spawner.default_url = '/lab'
 # c.Spawner.cpu_limit = 1
-c.Spawner.mem_limit = '3G'
+c.Spawner.mem_limit = '5G'
 c.Spawner.notebook_dir = notebook_dir
 
 # Debug settimgs
