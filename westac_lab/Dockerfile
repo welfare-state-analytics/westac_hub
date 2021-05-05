@@ -51,7 +51,8 @@ RUN set -ex; \
 
 RUN python3.8 -m venv /venv
 
-ENV PATH=/venv/bin:/usr/local/bin:$PATH
+ENV PATH="/venv/bin:/usr/local/bin:$PATH"
+RUN echo "export PATH=${PATH}" >> /root/.bashrc
 
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/local/bin/tini
 
@@ -74,7 +75,10 @@ RUN \
     && python -m spacy link en_core_web_sm en --force \
     && mkdir -p /data
 
-RUN jupyter labextension install ipyaggrid @finos/perspective-jupyterlab
+RUN jupyter labextension install \
+        ipyaggrid \
+        @finos/perspective-jupyterlab \
+        @jupyter-widgets/jupyterlab-manager
 
 ENV NLTK_DATA=/usr/local/share/nltk_data
 
