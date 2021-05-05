@@ -8,9 +8,13 @@ include .env
 build: check-files network host-volume lab-image hub-image
 	@echo "Build done"
 
-rebuild: down clear-user-volumes build up
+rebuild: down clear-user-volumes build jupyterhub-config up
 	@echo "Rebuild done"
 	@exit 0
+
+jupyterhub-config:
+	@echo "Copying jupyterhub_config.py to /etc/jupyterhub/jupyterhub_config.py"
+	@sudo cp -f jupyterhub_config.py /etc/jupyterhub/jupyterhub_config.py
 
 network:
 	@docker network inspect $(HUB_NETWORK_NAME) >/dev/null 2>&1 || docker network create $(HUB_NETWORK_NAME)
@@ -50,7 +54,17 @@ lab-image:
 		-f $(LAB_IMAGE_NAME)/Dockerfile $(LAB_IMAGE_NAME)
 
 run-lab-image:
-	docker run --rm -p ${LAB_PORT}:${LAB_PORT} --mount "type=bind,source=/data,target=/data" $(LAB_IMAGE_NAME):latest
+	@echo "Building lab image"
+	@docker build \
+		--build-arg PYPI_PACKAGE=$(PYPI_PACKAGE) \
+		--build-arg PYPI_PACKAGE_VERSION=$(PYPI_PACKAGE_VERSION) \
+		--build-arg GITHUB_ORG=$(GITHUB_ORG) \
+		--build-arg GITHUB_REPOSITORY=$(GITHUB_REPOSITORY) \
+		--build-arg JUPYTERHUB_VERSION=$(JUPYTERHUB_VERSION) \
+		--build-arg LAB_PORT=8889 \
+		-t $(LAB_IMAGE_NAME):8889 \
+		-f $(LAB_IMAGE_NAME)/Dockerfile $(LAB_IMAGE_NAME)
+	@docker run --rm -p 8889:8889 --mount "type=bind,source=/data,target=/data" $(LAB_IMAGE_NAME):8889
 
 bash-hub:
 	@docker exec -it -t $(HUB_CONTAINER_NAME) /bin/bash
@@ -103,6 +117,3 @@ nuke:
 .PHONY: down up build restart network userlist host-volume
 .PHONY: lab-image hub-image
 .PHONY: nuke
-
-
-
