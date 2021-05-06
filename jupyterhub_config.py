@@ -12,8 +12,10 @@ import oauthenticator
 network_name = os.environ['HUB_NETWORK_NAME']
 spawn_cmd = os.environ.get('DOCKER_SPAWN_CMD', "start-singleuser.sh")
 notebook_dir = os.environ.get('LAB_NOTEBOOK_DIR') or '/home/jovyan'
-data_dir = os.environ.get('HUB_HOST_VOLUME_FOLDER', '/data')
 config_dir = os.environ.get('HUB_CONFIG_FOLDER', '/etc/jupyterhub')
+project_name =os.environ.get('PROJECT_NAME', 'public')
+data_dir = os.environ.get('HUB_HOST_VOLUME_FOLDER', '/data')
+project_data_dir = os.path.join(data_dir, project_name)
 
 def read_userlist():
     allowed_users, admin = set(), set()
@@ -44,10 +46,11 @@ c.JupyterHub.services = [
 
 c.JupyterHub.spawner_class = 'dockerspawner.DockerSpawner'
 c.JupyterHub.admin_access = True
-c.JupyterHub.hub_ip = '0.0.0.0'                                                 # The public facing ip of the whole application (the proxy)
-c.JupyterHub.hub_connect_ip = os.environ['HUB_IP']                              # The ip for this process
+c.JupyterHub.hub_ip = '0.0.0.0'
+c.JupyterHub.hub_connect_ip = os.environ['HUB_IP']
+
 c.JupyterHub.authenticator_class = oauthenticator.github.GitHubOAuthenticator
-c.JupyterHub.cookie_secret_file = os.path.join(data_dir, 'jupyterhub_cookie_secret')
+c.JupyterHub.cookie_secret_file = os.path.join(project_data_dir, 'jupyterhub_cookie_secret')
 
 c.GitHubOAuthenticator.oauth_callback_url = os.environ['OAUTH_CALLBACK_URL']
 c.GitHubOAuthenticator.client_id = os.environ['OAUTH_CLIENT_ID']
@@ -58,12 +61,12 @@ c.Authenticator.allowed_users, c.Authenticator.admin_users = read_userlist()
 c.DockerSpawner.image = os.environ['DOCKER_JUPYTER_CONTAINER']
 c.DockerSpawner.use_internal_ip = True
 c.DockerSpawner.network_name = network_name
-c.DockerSpawner.notebook_dir = '/home/jovyan/work'                          # notebook_dir
+c.DockerSpawner.notebook_dir = '/home/jovyan/work'
 
 c.DockerSpawner.volumes = {
     'jupyterhub-westac-user-{username}': '/home/jovyan/work',
-    '/data/westac': {
-        "bind": '/data/westac',
+    project_data_dir: {
+        "bind": project_data_dir,
         "mode": "rw"
     }
 }

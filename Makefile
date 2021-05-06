@@ -90,7 +90,7 @@ backup-user-volumes:
 
 clean: down
 	-docker rm `docker ps -f "ancestor=$(LAB_IMAGE_NAME)" -q --all` >/dev/null 2>&1
-	-docker rm `docker ps -f "ancestor=westac_jupyterhub" -q --all` >/dev/null 2>&1
+	-docker rm `docker ps -f "ancestor=$(PROJECT_NAME)_jupyterhub" -q --all` >/dev/null 2>&1
 	@docker volume rm `docker volume ls -q`
 
 down:
