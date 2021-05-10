@@ -21,7 +21,7 @@ services:
       - "/etc/passwd:/etc/passwd"
       - "/etc/pam.d:/etc/pam.d"
     environment:
-      DOCKER_JUPYTER_CONTAINER: ${LAB_IMAGE_NAME}
+      LAB_IMAGE_NAME: ${LAB_IMAGE_NAME}
       HUB_IP: ${HUB_CONTAINER_NAME}
       HUB_NETWORK_NAME: ${HUB_NETWORK_NAME}
     env_file:
@@ -44,3 +44,6 @@ networks:
     default:
       external:
         name: ${HUB_NETWORK_NAME}
+    env_file:
+        - .env
+
