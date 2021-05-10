@@ -3,22 +3,7 @@ FROM ubuntu:focal-20210416
 # Notice: part of this code is from jupyter project
 LABEL MAINTAINER Roger Mähler <roger dot mahler at umu dot se>
 
-ARG LAB_USER="jovyan"
-ARG LAB_UID="1000"
-ARG LAB_GID="100"
-ARG LAB_PORT=8888
-
 ARG TINI_VERSION=v0.18.0
-ARG JUPYTERHUB_VERSION
-
-ARG GITHUB_ORG
-ARG GITHUB_REPOSITORY
-ARG PYPI_PACKAGE
-
-ENV LAB_PORT=${LAB_PORT} \
-    LAB_USER=$LAB_USER \
-    LAB_UID=$LAB_UID \
-    LAB_GID=$LAB_GID
 
 ENV SHELL=/bin/bash
 ENV DEBIAN_FRONTEND=noninteractive
@@ -49,70 +34,74 @@ RUN set -ex; \
     && npm install n -g \
     && n stable
 
-RUN python3.8 -m venv /venv
-
-ENV PATH="/venv/bin:/usr/local/bin:$PATH"
-RUN echo "export PATH=${PATH}" >> /root/.bashrc
-
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/local/bin/tini
-
 RUN chmod +x /usr/local/bin/tini
-
-RUN python --version \
-    && pip install --quiet --upgrade pip \
-    && pip install --quiet jupyterhub==${JUPYTERHUB_VERSION}
-
-ARG PYPI_PACKAGE_VERSION
-
-RUN pip install --quiet ${PYPI_PACKAGE}==${PYPI_PACKAGE_VERSION}
-
-RUN \
-    python -m nltk.downloader -d /usr/local/share/nltk_data stopwords punkt sentiwordnet \
-    \
-    && pip install --quiet spacy-lookups-data \
-    && python -m spacy download en_core_web_sm \
-    && python -m spacy download en_core_web_md \
-    && python -m spacy link en_core_web_sm en --force \
-    && mkdir -p /data
-
-RUN jupyter labextension install \
-        ipyaggrid \
-        @finos/perspective-jupyterlab \
-        @jupyter-widgets/jupyterlab-manager
-
-ENV NLTK_DATA=/usr/local/share/nltk_data
 
 ENTRYPOINT ["tini", "-g", "--"]
 
-RUN adduser $LAB_USER --uid $LAB_UID --gid $LAB_GID --disabled-password --gecos '' --shell /bin/bash \
-    && adduser $LAB_USER sudo \
-    && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+ARG LAB_UID="201"
+ARG LAB_GID="2001"
+ARG LAB_USER="jovyan"
 
-RUN  npm cache clean --force \
+RUN  addgroup --gid $LAB_GID "${LAB_USER}s"  \
+  && adduser $LAB_USER --uid $LAB_UID --gid $LAB_GID --disabled-password --gecos '' --shell /bin/bash \
+  && adduser $LAB_USER sudo \
+  && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+ARG NLTK_DATA=/data/lib/nltk_data
+ARG SPACY_DATA=/data/lib/spacy_data/2.3.1
+ENV NLTK_DATA=${NLTK_DATA}
+ENV SPACY_DATA=${SPACY_DATA}
+
+# COPY scripts/install-data.sh /tmp/install-data.sh
+# RUN if [ "$SPACY_DATA" == "" ] ; then \
+#         chmod +x /tmp/install-data.sh && /tmp/install-data.sh ; \
+#     fi
+
+RUN python3.8 -m venv /venv
+ENV PATH="/venv/bin:/usr/local/bin:$PATH"
+RUN echo "export PATH=${PATH}" >> /root/.bashrc
+
+ARG JUPYTERHUB_VERSION
+
+RUN python --version \
+    && pip install --quiet --upgrade pip \
+    && pip install --quiet jupyterhub==${JUPYTERHUB_VERSION} \
+    \
+    && mkdir -p /data
+
+ARG PYPI_PACKAGE
+ARG PYPI_PACKAGE_VERSION
+
+RUN pip install --quiet ${PYPI_PACKAGE}==${PYPI_PACKAGE_VERSION} \
+    \
+    && jupyter labextension install \
+        ipyaggrid \
+        @finos/perspective-jupyterlab \
+        @jupyter-widgets/jupyterlab-manager \
+    \
+    && npm cache clean --force \
     && jupyter lab clean \
     && pip cache purge
 
-# root@2321233364af:/usr/local/lib/python3.8/site-packages# du -s spacy_lookups_data/data/* | sort -n
+# RUN chown --quiet --recursive ${LAB_UID}.${LAB_GID} /venv
 
-EXPOSE ${LAB_PORT}
+USER $LAB_USER
 
 ENV HOME=/home/$LAB_USER
-USER $LAB_USER
-WORKDIR $HOME
 
 RUN mkdir -p $HOME/work
 
-WORKDIR $HOME/work
+COPY --chown=$LAB_USER:users scripts $HOME/work/scripts
+COPY --chown=$LAB_USER:users data $HOME/work/data
 
-ADD https://api.github.com/repos/${GITHUB_ORG}/${GITHUB_REPOSITORY}/git/refs/heads/master version.json
+ARG GITHUB_REPOSITORY_URL
 
-RUN git clone https://github.com/${GITHUB_ORG}/${GITHUB_REPOSITORY}.git \
-    && cd ${GITHUB_REPOSITORY} \
-    && rm -rf tests scripts .git* .devcontainer* .flake* .pre* .pylint* .travis* .isort* .docker* \
-        *oetry* pyproject* pyright* pytest* run* environment.yml westac \
-        Makefile requirements.txt NOTE*.md README*.md setup.py ipynb2py.sh
+RUN chmod +x $HOME/work/scripts/*.sh \
+    && $HOME/work/scripts/update-notebooks.sh -r ${GITHUB_REPOSITORY_URL} notebooks resources __paths__.py
 
-COPY --chown=$LAB_USER:users data $HOME/work/${GITHUB_REPOSITORY}/data
+WORKDIR ${HOME}
 
 CMD ["jupyterhub-singleuser"]
+
 # CMD jupyter lab --ip=* --port=${LAB_PORT} --no-browser --allow-root
