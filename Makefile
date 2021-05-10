@@ -12,7 +12,7 @@ NLTK_DATA=/data/lib/nltk_data
 
 HOST_USERNAME=$(PROJECT_NAME)
 
-build: check-files network host-volume lab-image hub-image host-user
+build: backup-config check-files network host-volume lab-image hub-image host-user
 	@echo "Build done"
 
 host-user:
@@ -123,6 +123,19 @@ backup-user-volumes:
 	@mkdir -p ~/backup/docker-volumes/
 	@sudo find /var/lib/docker/volumes -maxdepth 1 -mindepth 1 -name "*$(PROJECT_NAME)*" -not -type l -print | \
 		sudo tar -czvf ~/backup/docker-volumes/$(USER_VOLUMES_BACKUP_NAME) --files-from=- >/dev/null 2>&1
+
+
+CONFIG_BACKUP_FILENAME="config_$(PROJECT_NAME)_$(PYPI_PACKAGE_VERSION)."`date '+%Y%m%d-%H%M'`.tar.gz
+backup-config:
+	@mkdir -p ~/backup/$(PROJECT_NAME)
+	@tar czf ~/backup/$(PROJECT_NAME)/$(CONFIG_BACKUP_FILENAME) \
+		--exclude=deprecated \
+		--exclude=.gitignore \
+		--exclude=.pytest_cache \
+		--exclude=.git \
+		--exclude=README.md \
+		--exclude=LICENSE \
+		--exclude=.env.template .
 
 clean: down
 	-docker rm `docker ps -f "ancestor=$(LAB_IMAGE_NAME)" -q --all` >/dev/null 2>&1
