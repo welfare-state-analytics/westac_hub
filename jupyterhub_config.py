@@ -58,7 +58,7 @@ c.GitHubOAuthenticator.client_secret = os.environ['OAUTH_CLIENT_SECRET']
 
 c.Authenticator.allowed_users, c.Authenticator.admin_users = read_userlist()
 
-c.DockerSpawner.image = os.environ['DOCKER_JUPYTER_CONTAINER']
+c.DockerSpawner.image = os.environ['LAB_IMAGE_NAME']
 c.DockerSpawner.use_internal_ip = True
 c.DockerSpawner.network_name = network_name
 c.DockerSpawner.notebook_dir = '/home/jovyan/work'
