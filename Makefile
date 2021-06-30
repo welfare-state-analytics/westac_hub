@@ -12,8 +12,12 @@ NLTK_DATA=/data/lib/nltk_data
 
 HOST_USERNAME=$(PROJECT_NAME)
 
-build: backup-config check-files network host-volume lab-image hub-image host-user
+build: backup-config check-files network host-volume host-user lab-image hub-image backup-hub-folder
 	@echo "Build done"
+
+backup-hub-folder:
+	@mkdir -p ../$(PROJECT_NAME).version.backups
+	@tar czvf ../$(PROJECT_NAME).version.backups/$(PROJECT_NAME).$(PYPI_PACKAGE_VERSION).tar.gz --exclude-vcs --exclude=.pytest_cache --exclude=deprecated .
 
 host-user:
 	@getent group $(HOST_USERNAME) &> /dev/null || echo addgroup --gid $(LAB_GID) $(HOST_USERNAME) &>/dev/null
@@ -149,12 +153,12 @@ up:
 	@docker-compose up -d
 
 follow-hub:
-	@docker logs $(LAB_IMAGE_NAME) --follow
+	@docker logs $(HUB_IMAGE_NAME) --follow
 
 follow-lab:
 	@docker logs `docker ps -f "ancestor=$(LAB_IMAGE_NAME)" -q --all | head -1` --follow
 
-restart: down up follow
+restart: down up follow-hub
 
 nuke:
 	-docker stop `docker ps --all -q`
