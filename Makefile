@@ -20,8 +20,8 @@ backup-hub-folder:
 	@tar czvf ../$(PROJECT_NAME).version.backups/$(PROJECT_NAME).$(PYPI_PACKAGE_VERSION).tar.gz --exclude-vcs --exclude=.pytest_cache --exclude=deprecated .
 
 host-user:
-	@getent group $(HOST_USERNAME) &> /dev/null || echo addgroup --gid $(LAB_GID) $(HOST_USERNAME) &>/dev/null
-	@id -u $(HOST_USERNAME) &> /dev/null || sudo adduser $(HOST_USERNAME) --uid $(LAB_UID) --gid $(LAB_GID) --no-create-home --disabled-password --gecos '' --shell /bin/bash
+	@-getent group $(HOST_USERNAME) &> /dev/null || echo addgroup --gid $(LAB_GID) $(HOST_USERNAME) &>/dev/null
+	@-id -u $(HOST_USERNAME) &> /dev/null || sudo adduser $(HOST_USERNAME) --uid $(LAB_UID) --gid $(LAB_GID) --no-create-home --disabled-password --gecos '' --shell /bin/bash
 
 rebuild: down clear-user-volumes build jupyterhub-config up
 	@echo "Rebuild done"
@@ -71,6 +71,7 @@ lab-image:
 	docker build \
 		--build-arg PYPI_PACKAGE=$(PYPI_PACKAGE) \
 		--build-arg PYPI_PACKAGE_VERSION=$(PYPI_PACKAGE_VERSION) \
+                --build-arg GITHUB_REPOSITORY_BRANCH=$(GITHUB_REPOSITORY_BRANCH) \
 		--build-arg GITHUB_REPOSITORY_URL=$(GITHUB_REPOSITORY_URL) \
 		--build-arg JUPYTERHUB_VERSION=$(JUPYTERHUB_VERSION) \
 		--build-arg LAB_UID=$(LAB_UID) \

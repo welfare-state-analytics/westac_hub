@@ -1,5 +1,4 @@
-FROM ubuntu:focal-20210416
-
+FROM ubuntu:20.04
 # Notice: part of this code is from jupyter project
 LABEL MAINTAINER Roger Mähler <roger dot mahler at umu dot se>
 
@@ -97,9 +96,10 @@ COPY --chown=$LAB_USER:users scripts $HOME/work/scripts
 COPY --chown=$LAB_USER:users data $HOME/work/data
 
 ARG GITHUB_REPOSITORY_URL
+ARG GITHUB_REPOSITORY_BRANCH
 
 RUN chmod +x $HOME/work/scripts/*.sh \
-    && $HOME/work/scripts/update-notebooks.sh -r ${GITHUB_REPOSITORY_URL} notebooks resources __paths__.py
+    && $HOME/work/scripts/update-notebooks.sh -b ${GITHUB_REPOSITORY_BRANCH} -r ${GITHUB_REPOSITORY_URL} notebooks resources __paths__.py westac
 
 WORKDIR ${HOME}
 
