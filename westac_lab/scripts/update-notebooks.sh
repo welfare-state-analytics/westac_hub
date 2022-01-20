@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 GIT_REPOSITORY_URL=
+GIT_REPOSITORY_BRANCH=
 PROJECT_NAME=
-INSTALL_ITEMS=("notebooks" "resources" "__paths__.py")
+INSTALL_ITEMS=("notebooks" "resources" "__paths__.py" "westac")
 TARGET_FOLDER=${HOME}/work
 
 mkdir -p $TARGET_FOLDER
@@ -26,7 +27,7 @@ run() {
 
     cd /tmp
 
-    git clone ${GIT_REPOSITORY_URL}
+    git clone --branch ${GIT_REPOSITORY_BRANCH} ${GIT_REPOSITORY_URL}
 
     echo "Installing: $INSTALL_ITEMS"
     for item in ${INSTALL_ITEMS[@]} ; do
@@ -55,6 +56,7 @@ Available options:
 -h, --help            Print this help and exit
 -f, --flag            Some flag description
 -r, --repository-url  URL to repository
+-b, --branch          Specify repository branch
 EOF
   exit
 }
@@ -69,6 +71,10 @@ parse_opts() {
             GIT_REPOSITORY_URL="${2-}" ;
             PROJECT_NAME=`basename "${GIT_REPOSITORY_URL}"` ;
             PROJECT_NAME="${PROJECT_NAME%.*}" ;
+            shift
+            ;;
+        -b | --branch) # branch
+            GIT_REPOSITORY_BRANCH="${2-}" ;
             shift
             ;;
         -?*) die "Unknown option: $1" ;;
