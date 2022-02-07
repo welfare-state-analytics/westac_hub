@@ -42,13 +42,13 @@ ARG LAB_UID="201"
 ARG LAB_GID="2001"
 ARG LAB_USER="jovyan"
 
-RUN  addgroup --gid $LAB_GID "${LAB_USER}s"  \
+RUN  addgroup --gid $LAB_GID "${LAB_USER}"  \
   && adduser $LAB_USER --uid $LAB_UID --gid $LAB_GID --disabled-password --gecos '' --shell /bin/bash \
   && adduser $LAB_USER sudo \
   && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
-ARG NLTK_DATA=/data/lib/nltk_data
-ARG SPACY_DATA=/data/lib/spacy_data/2.3.1
+ARG NLTK_DATA
+ARG SPACY_DATA
 ENV NLTK_DATA=${NLTK_DATA}
 ENV SPACY_DATA=${SPACY_DATA}
 
@@ -57,7 +57,7 @@ ENV SPACY_DATA=${SPACY_DATA}
 #         chmod +x /tmp/install-data.sh && /tmp/install-data.sh ; \
 #     fi
 
-RUN python3.8 -m venv /venv
+RUN python3.8 -m venv /venv && source /venv/bin/activate
 ENV PATH="/venv/bin:/usr/local/bin:$PATH"
 RUN echo "export PATH=${PATH}" >> /root/.bashrc
 
@@ -65,7 +65,9 @@ ARG JUPYTERHUB_VERSION
 
 RUN python --version \
     && pip install --quiet --upgrade pip \
-    && pip install --quiet jupyterhub==${JUPYTERHUB_VERSION} \
+    && if [ "$JUPYTERHUB_VERSION" != "" ]; then \
+        pip install --quiet jupyterhub==${JUPYTERHUB_VERSION}; \
+    fi \
     \
     && mkdir -p /data
 
@@ -73,13 +75,7 @@ ARG PYPI_PACKAGE
 ARG PYPI_PACKAGE_VERSION
 
 RUN pip install --quiet --upgrade pip \
-    && pip install --quiet ${PYPI_PACKAGE}==${PYPI_PACKAGE_VERSION} \
-    \
-    && jupyter labextension install \
-        ipyaggrid \
-        @finos/perspective-jupyterlab \
-        @jupyter-widgets/jupyterlab-manager \
-    \
+    && pip install --quiet ${PYPI_PACKAGE}${PYPI_PACKAGE_VERSION:+==$PYPI_PACKAGE_VERSION} \
     && npm cache clean --force \
     && jupyter lab clean \
     && pip cache purge
@@ -93,10 +89,12 @@ ENV HOME=/home/$LAB_USER
 RUN mkdir -p $HOME/work
 
 COPY --chown=$LAB_USER:users scripts $HOME/work/scripts
-COPY --chown=$LAB_USER:users data $HOME/work/data
+# COPY --chown=$LAB_USER:users data $HOME/work/data
 
 ARG GITHUB_REPOSITORY_URL
 ARG GITHUB_REPOSITORY_BRANCH
+ARG GITHUB_ACCESS_TOKEN
+ENV GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN}
 
 RUN chmod +x $HOME/work/scripts/*.sh \
     && $HOME/work/scripts/update-notebooks.sh -b ${GITHUB_REPOSITORY_BRANCH} -r ${GITHUB_REPOSITORY_URL} notebooks resources __paths__.py westac

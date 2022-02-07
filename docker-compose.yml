@@ -5,7 +5,7 @@ services:
   jupyterhub:
     image: ${HUB_IMAGE_NAME}:latest
     ports:
-      - "3001:8000"
+      - "8020:8000"
     container_name: ${HUB_IMAGE_NAME}
     restart: on-failure
     volumes:
