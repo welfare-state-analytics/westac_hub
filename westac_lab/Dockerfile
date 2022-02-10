@@ -57,7 +57,7 @@ ENV SPACY_DATA=${SPACY_DATA}
 #         chmod +x /tmp/install-data.sh && /tmp/install-data.sh ; \
 #     fi
 
-RUN python3.8 -m venv /venv && source /venv/bin/activate
+RUN python3.8 -m venv /venv && . /venv/bin/activate
 ENV PATH="/venv/bin:/usr/local/bin:$PATH"
 RUN echo "export PATH=${PATH}" >> /root/.bashrc
 
