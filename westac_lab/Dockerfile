@@ -20,11 +20,11 @@ RUN set -ex; \
         wget curl zip unzip bzip2 llvm git vim gnupg \
         libssl-dev libopenblas-base zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev  \
         libncurses5-dev ca-certificates netbase netcat \
-        python3 \
-        python3-dev \
+        python3.9 \
         python3-pip \
+        python3.9-dev \
+        python3.9-venv \
         python3-pycurl \
-        python3-venv \
         nodejs npm yarn \
         fonts-liberation > /dev/null \
     && rm -rf /var/lib/apt/lists/* \
@@ -57,7 +57,7 @@ ENV SPACY_DATA=${SPACY_DATA}
 #         chmod +x /tmp/install-data.sh && /tmp/install-data.sh ; \
 #     fi
 
-RUN python3.8 -m venv /venv && . /venv/bin/activate
+RUN python3.9 -m venv /venv && . /venv/bin/activate
 ENV PATH="/venv/bin:/usr/local/bin:$PATH"
 RUN echo "export PATH=${PATH}" >> /root/.bashrc
 
