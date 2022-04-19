@@ -15,6 +15,10 @@ HOST_USERNAME=$(PROJECT_NAME)
 build: backup-config check-files network host-volume host-user lab-image hub-image backup-hub-folder
 	@echo "Build done"
 
+git-tag:
+	@git tag v$(PYPI_PACKAGE_VERSION)
+	@git push origin v$(PYPI_PACKAGE_VERSION)
+
 backup-hub-folder:
 	@mkdir -p ../$(PROJECT_NAME).version.backups
 	@tar czvf ../$(PROJECT_NAME).version.backups/$(PROJECT_NAME).$(PYPI_PACKAGE_VERSION).tar.gz --exclude-vcs --exclude=.pytest_cache --exclude=deprecated .
@@ -73,7 +77,9 @@ lab-image:
 		--build-arg PYPI_PACKAGE_VERSION=$(PYPI_PACKAGE_VERSION) \
                 --build-arg GITHUB_REPOSITORY_BRANCH=$(GITHUB_REPOSITORY_BRANCH) \
 		--build-arg GITHUB_REPOSITORY_URL=$(GITHUB_REPOSITORY_URL) \
+		--build-arg GITHUB_REPOSITORY_INFO_URL=$(GITHUB_REPOSITORY_INFO_URL) \
 		--build-arg JUPYTERHUB_VERSION=$(JUPYTERHUB_VERSION) \
+		--build-arg SPACY_DATA=$(SPACY_DATA) \
 		--build-arg LAB_UID=$(LAB_UID) \
 		--build-arg LAB_GID=$(LAB_GID) \
 		-t $(LAB_IMAGE_NAME):latest \
@@ -94,6 +100,8 @@ run-lab-image:
 		--build-arg PYPI_PACKAGE=$(PYPI_PACKAGE) \
 		--build-arg PYPI_PACKAGE_VERSION=$(PYPI_PACKAGE_VERSION) \
 		--build-arg GITHUB_REPOSITORY_URL=$(GITHUB_REPOSITORY_URL) \
+		--build-arg GITHUB_REPOSITORY_INFO_URL=$(GITHUB_REPOSITORY_INFO_URL) \
+		--build-arg SPACY_DATA=$(SPACY_DATA) \
 		--build-arg JUPYTERHUB_VERSION=$(JUPYTERHUB_VERSION) \
 		--build-arg LAB_PORT=8889 \
 		-t $(LAB_IMAGE_NAME):8889 \
