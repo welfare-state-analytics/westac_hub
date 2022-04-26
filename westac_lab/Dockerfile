@@ -91,16 +91,16 @@ RUN mkdir -p $HOME/work
 COPY --chown=$LAB_USER:users scripts $HOME/work/scripts
 # COPY --chown=$LAB_USER:users data $HOME/work/data
 
-ARG GITHUB_REPOSITORY_URL
-ARG GITHUB_REPOSITORY_BRANCH
-ARG GITHUB_REPOSITORY_INFO_URL
+ARG NOTEBOOKS_REPOSITORY_URL
+ARG NOTEBOOKS_REPOSITORY_BRANCH
+ARG NOTEBOOKS_REPOSITORY_INFO_URL
 ARG GITHUB_ACCESS_TOKEN
 ENV GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN}
 
-ADD  ${GITHUB_REPOSITORY_INFO_URL} /tmp/repo.info
+ADD  ${NOTEBOOKS_REPOSITORY_INFO_URL} /tmp/repo.info
 
 RUN chmod +x $HOME/work/scripts/*.sh \
-    && $HOME/work/scripts/update-notebooks.sh -b ${GITHUB_REPOSITORY_BRANCH} -r ${GITHUB_REPOSITORY_URL} notebooks resources __paths__.py westac
+    && $HOME/work/scripts/update-notebooks.sh -b ${NOTEBOOKS_REPOSITORY_BRANCH} -r ${NOTEBOOKS_REPOSITORY_URL} notebooks resources __paths__.py westac
 
 WORKDIR ${HOME}
 
