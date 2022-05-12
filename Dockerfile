@@ -17,7 +17,8 @@ RUN pip install --upgrade pip \
     && pip install --quiet \
         jupyterhub-idle-culler \
         dockerspawner \
-        oauthenticator
+        oauthenticator \
+        jupyterhub-nativeauthenticator
 
 WORKDIR /srv
 

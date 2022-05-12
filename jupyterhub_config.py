@@ -3,6 +3,7 @@
 import os
 import sys
 import oauthenticator
+from nativeauthenticator import NativeAuthenticator
 
 c = get_config()
 
@@ -47,14 +48,36 @@ c.JupyterHub.spawner_class = 'dockerspawner.DockerSpawner'
 c.JupyterHub.admin_access = True
 c.JupyterHub.hub_ip = '0.0.0.0'
 c.JupyterHub.hub_connect_ip = os.environ['HUB_IP']
-c.JupyterHub.authenticator_class = oauthenticator.github.GitHubOAuthenticator
-#c.JupyterHub.cookie_secret_file = os.path.join(project_data_dir, 'jupyterhub_cookie_secret')
 
 c.JupyterHub.cookie_secret_file = '/tmp/jupyterhub_cookie_secret'
+c.JupyterHub.db_url = f'sqlite:///{config_dir}/jupyterhub.sqlite'
 
-c.GitHubOAuthenticator.oauth_callback_url = os.environ['OAUTH_CALLBACK_URL']
-c.GitHubOAuthenticator.client_id = os.environ['OAUTH_CLIENT_ID']
-c.GitHubOAuthenticator.client_secret = os.environ['OAUTH_CLIENT_SECRET']
+USE_NATIVE_AUTHENTICATOR = True
+
+if USE_NATIVE_AUTHENTICATOR:
+
+    import warnings
+    c.JupyterHub.authenticator_class = 'nativeauthenticator.NativeAuthenticator'
+    c.NativeAuthenticator.enable_auth_state = True
+
+    if 'JUPYTERHUB_CRYPT_KEY' not in os.environ:
+        warnings.warn(
+            "Need JUPYTERHUB_CRYPT_KEY env for persistent auth_state.\n"
+            "    export JUPYTERHUB_CRYPT_KEY=$(openssl rand -hex 32)"
+        )
+        c.CryptKeeper.keys = [ os.urandom(32) ]
+
+
+    c.NativeAuthenticator.check_common_password = True
+    c.NativeAuthenticator.minimum_password_length = 8
+    c.NativeAuthenticator.allowed_failed_logins = 3
+    c.NativeAuthenticator.enable_signup = True
+
+else:
+    c.JupyterHub.authenticator_class = oauthenticator.github.GitHubOAuthenticator
+    c.GitHubOAuthenticator.oauth_callback_url = os.environ['OAUTH_CALLBACK_URL']
+    c.GitHubOAuthenticator.client_id = os.environ['OAUTH_CLIENT_ID']
+    c.GitHubOAuthenticator.client_secret = os.environ['OAUTH_CLIENT_SECRET']
 
 c.Authenticator.allowed_users, c.Authenticator.admin_users = read_userlist()
 c.Authenticator.auto_login = False
