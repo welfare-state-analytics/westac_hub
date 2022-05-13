@@ -94,7 +94,7 @@ c.DockerSpawner.notebook_dir = notebook_dir
 c.DockerSpawner.volumes = {
     'jupyterhub-' + project_name + '-user-{username}': notebook_dir,
     project_data_dir: {
-        "bind": project_data_dir,
+        "bind": '/data',
         "mode": "rw"
     },
     lib_data_dir: {
