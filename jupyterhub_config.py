@@ -11,7 +11,7 @@ network_name = os.environ['HUB_NETWORK_NAME']
 spawn_cmd = os.environ.get('DOCKER_SPAWN_CMD', "start-singleuser.sh")
 notebook_dir = os.environ.get('LAB_NOTEBOOK_DIR') or '/home/jovyan'
 config_dir = os.environ.get('HUB_CONFIG_FOLDER', '/etc/jupyterhub')
-project_name =os.environ.get('PROJECT_NAME', 'public')
+project_name = os.environ.get('PROJECT_NAME', 'public')
 data_dir = os.environ.get('HUB_HOST_VOLUME_FOLDER', '/data')
 
 notebook_dir ='/home/jovyan/work'
