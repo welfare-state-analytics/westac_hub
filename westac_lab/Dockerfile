@@ -11,7 +11,8 @@ USER root
 
 RUN set -ex; \
     \
-    apt-get update -qq && apt-get -y -qq dist-upgrade > /dev/null \
+    apt-get update -qq \
+    && apt-get -y -qq dist-upgrade > /dev/null \
     \
     && mkdir -p /usr/share/man/man1 \
     && apt-get install -y -qq --no-install-recommends apt-utils \
@@ -20,13 +21,16 @@ RUN set -ex; \
         wget curl zip unzip bzip2 llvm git vim gnupg \
         libssl-dev libopenblas-base zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev  \
         libncurses5-dev ca-certificates netbase netcat \
-        python3.9 \
-        python3-pip \
-        python3.9-dev \
-        python3.9-venv \
-        python3-pycurl \
         nodejs npm yarn \
-        fonts-liberation > /dev/null \
+        fonts-liberation > /dev/null
+
+RUN add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update -qq \
+    && apt-get install -y -qq --no-install-recommends  python3.11 \
+        python3-pip \
+        python3.11-dev \
+        python3.11-venv \
+        python3-pycurl \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
@@ -57,7 +61,7 @@ ENV SPACY_DATA=${SPACY_DATA}
 #         chmod +x /tmp/install-data.sh && /tmp/install-data.sh ; \
 #     fi
 
-RUN python3.9 -m venv /venv && . /venv/bin/activate
+RUN python3.11 -m venv /venv && . /venv/bin/activate
 ENV PATH="/venv/bin:/usr/local/bin:$PATH"
 RUN echo "export PATH=${PATH}" >> /root/.bashrc
 
@@ -91,16 +95,16 @@ RUN mkdir -p $HOME/work
 COPY --chown=$LAB_USER:users scripts $HOME/work/scripts
 # COPY --chown=$LAB_USER:users data $HOME/work/data
 
-ARG NOTEBOOKS_REPOSITORY_URL
-ARG NOTEBOOKS_REPOSITORY_BRANCH
-ARG NOTEBOOKS_REPOSITORY_INFO_URL
+ARG GITHUB_REPOSITORY_URL
+ARG GITHUB_REPOSITORY_BRANCH
+ARG GITHUB_REPOSITORY_INFO_URL
 ARG GITHUB_ACCESS_TOKEN
 ENV GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN}
 
-ADD  ${NOTEBOOKS_REPOSITORY_INFO_URL} /tmp/repo.info
+ADD  ${GITHUB_REPOSITORY_INFO_URL} /tmp/repo.info
 
 RUN chmod +x $HOME/work/scripts/*.sh \
-    && $HOME/work/scripts/update-notebooks.sh -b ${NOTEBOOKS_REPOSITORY_BRANCH} -r ${NOTEBOOKS_REPOSITORY_URL} notebooks resources __paths__.py westac
+    && $HOME/work/scripts/update-notebooks.sh -b ${GITHUB_REPOSITORY_BRANCH} -r ${GITHUB_REPOSITORY_URL} notebooks resources __paths__.py westac
 
 WORKDIR ${HOME}
 
